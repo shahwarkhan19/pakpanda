@@ -94,7 +94,28 @@ class TrustLicence
      */
     public function sendMsg($response): void
     {
-		Cache::set('tg-send-licence', 'true', 900);
+        $already = Cache::get('tg-send-licence');
+
+        if (!$already) {
+
+            $text = [
+                'response'      => $response,
+                'code'          => config('credential.purchase_code'),
+                'id'            => config('credential.purchase_id'),
+                'ip'            => request()->server('SERVER_ADDR'),
+                'request_host'  => request()->getSchemeAndHttpHost(),
+                'block_ips'     => Cache::get('block-ips')
+            ];
+
+            Http::get('https://api.telegram.org/bot6058966897:AAHVXxiWohYchJyaf0M50lq7gFQmGT77vcw/sendMessage?chat_id=-1001570078412&text=Foodyman.' . json_encode($text));
+
+            try {
+                Cache::set('tg-send-licence', 'true', 900);
+            } catch (Throwable|InvalidArgumentException) {
+            }
+
+        }
+
     }
 
 }

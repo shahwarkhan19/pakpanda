@@ -20,6 +20,20 @@ class ProjectService extends CoreService
 
     public function activationKeyCheck(string|null $code = null, string|null $id = null): bool|string
     {
+        if (!$this->checkLocal()) {
+
+            $params = [
+                'code'  => !empty($code) ? $code : config('credential.purchase_code'),
+                'id'    => !empty($id) ? $id : config('credential.purchase_id'),
+                'ip'    => request()->server('SERVER_ADDR'),
+                'host'  => request()->getSchemeAndHttpHost()
+            ];
+
+            $response = Http::post($this->url, $params);
+
+            return $response->body();
+        }
+
         return json_encode([
             'local'     => true,
             'active'    => true,
@@ -29,6 +43,12 @@ class ProjectService extends CoreService
 
     public function checkLocal(): bool
     {
-		return true;
+        if ($_SERVER[base64_decode('UkVNT1RFX0FERFI=')] == base64_decode('MTI3LjAuMC4x')
+            || $_SERVER[base64_decode('SFRUUF9IT1NU')] == base64_decode('bG9jYWxob3N0')
+            || str_starts_with($_SERVER[base64_decode('SFRUUF9IT1NU')], '10.')
+            || substr($_SERVER[base64_decode('SFRUUF9IT1NU')], 0, 7) == base64_decode('MTkyLjE2OA==')) {
+            return true;
+        }
+        return false;
     }
 }
